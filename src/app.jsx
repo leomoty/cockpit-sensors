@@ -18,7 +18,7 @@
  */
 
 import cockpit from 'cockpit';
-import React, { useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { EmptyStatePanel } from "cockpit-components-empty-state.jsx";
 import { TableComposable, Thead, Tr, Th, Tbody, Td } from '@patternfly/react-table';
 
@@ -27,13 +27,19 @@ const _ = cockpit.gettext;
 const Application = () => {
     const [sensors, setSensors] = useState([]);
 
-    setInterval(() => {
+    const getSensorsData = useCallback(() => {
         cockpit.spawn(["sensors", "-j"])
-                .then(res => res.replaceAll(/temp\d+_/ig, "temp_"))
-                .then(res => JSON.parse(res))
-                .then(data => setSensors(Object.entries(data)));
-        console.log(sensors);
-    }, 5000);
+                .then(res => {
+                    const normalizedRes = res.replaceAll(/temp\d+_/ig, "temp_");
+                    const jsonResp = JSON.parse(normalizedRes);
+                    setSensors(Object.entries(jsonResp));
+                });
+    }, []);
+
+    useEffect(() => {
+        const interval = setInterval(getSensorsData, 1000);
+        return () => clearInterval(interval);
+    }, [getSensorsData]);
 
     if (!sensors.length) {
         return <EmptyStatePanel loading />;
@@ -54,7 +60,7 @@ const Application = () => {
             {sensors.map(([key, data]) => (
                 <Tbody key={key}>
                     <Tr>
-                        <Td>{data.Adapter}</Td>
+                        <Td>{key} / {data.Adapter}</Td>
                     </Tr>
                     {Object.entries(data).filter(([k]) => k !== 'Adapter')
                             .map(([key, value]) => (
