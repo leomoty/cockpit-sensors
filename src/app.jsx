@@ -18,14 +18,17 @@
  */
 
 import cockpit from 'cockpit';
+import { dateTimeSeconds } from 'timeformat';
 import React, { useEffect, useState, useCallback } from 'react';
 import { EmptyStatePanel } from "cockpit-components-empty-state.jsx";
+import { Page, PageSection, Grid, GridItem } from '@patternfly/react-core';
 import { TableComposable, Thead, Tr, Th, Tbody, Td } from '@patternfly/react-table';
 
 const _ = cockpit.gettext;
 
 const Application = () => {
     const [sensors, setSensors] = useState([]);
+    const [lastUpdated, setLastUpdated] = useState(null);
 
     const getSensorsData = useCallback(() => {
         cockpit.spawn(["sensors", "-j"])
@@ -33,6 +36,7 @@ const Application = () => {
                     const normalizedRes = res.replaceAll(/temp\d+_/ig, "temp_");
                     const jsonResp = JSON.parse(normalizedRes);
                     setSensors(Object.entries(jsonResp));
+                    setLastUpdated(new Date());
                 });
     }, []);
 
@@ -46,34 +50,41 @@ const Application = () => {
     }
 
     return (
-        <TableComposable
-            variant='compact'
-        >
-            <Thead>
-                <Tr>
-                    <Th>{_("Device")}</Th>
-                    <Th>{_("Temperature")}</Th>
-                    <Th>{_("Max Temp")}</Th>
-                    <Th>{_("Critical Temp")}</Th>
-                </Tr>
-            </Thead>
-            {sensors.map(([key, data]) => (
-                <Tbody key={key}>
-                    <Tr>
-                        <Td>{key} / {data.Adapter}</Td>
-                    </Tr>
-                    {Object.entries(data).filter(([k]) => k !== 'Adapter')
-                            .map(([key, value]) => (
-                                <Tr key={key}>
-                                    <Td>{key}</Td>
-                                    <Td>{value.temp_input} ºC</Td>
-                                    {value.temp_max ? <Td>{value.temp_max} ºC</Td> : null}
-                                    {value.temp_max ? <Td>{value.temp_crit} ºC</Td> : null}
-                                </Tr>)
-                            )}
-                </Tbody>
-            ))}
-        </TableComposable>
+        <Page isFilled>
+            <PageSection>
+                <Grid hasGutter>
+                    <GridItem>
+                        <TableComposable variant='compact'>
+                            <Thead>
+                                <Tr>
+                                    <Th>{_("Device")}</Th>
+                                    <Th>{_("Temperature")}</Th>
+                                    <Th>{_("Max Temp")}</Th>
+                                    <Th>{_("Critical Temp")}</Th>
+                                </Tr>
+                            </Thead>
+                            {sensors.map(([key, data]) => (
+                                <Tbody key={key}>
+                                    <Tr>
+                                        <Td>{key} / {data.Adapter}</Td>
+                                    </Tr>
+                                    {Object.entries(data).filter(([k]) => k !== 'Adapter')
+                                            .map(([key, value]) => (
+                                                <Tr key={key}>
+                                                    <Td>{key}</Td>
+                                                    <Td>{value.temp_input} ºC</Td>
+                                                    {value.temp_max ? <Td>{value.temp_max} ºC</Td> : null}
+                                                    {value.temp_max ? <Td>{value.temp_crit} ºC</Td> : null}
+                                                </Tr>)
+                                            )}
+                                </Tbody>
+                            ))}
+                        </TableComposable>
+                        {lastUpdated ? <span>Last updated at {dateTimeSeconds(lastUpdated)}</span> : null}
+                    </GridItem>
+                </Grid>
+            </PageSection>
+        </Page>
     );
 };
 
