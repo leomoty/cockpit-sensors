@@ -18,13 +18,23 @@
  */
 
 import cockpit from 'cockpit';
-import { dateTimeSeconds } from 'timeformat';
+import { formatter } from 'timeformat';
 import React, { useEffect, useState, useCallback } from 'react';
 import { EmptyStatePanel } from "cockpit-components-empty-state.jsx";
 import { Page, PageSection, Grid, GridItem } from '@patternfly/react-core';
 import { TableComposable, Thead, Tr, Th, Tbody, Td } from '@patternfly/react-table';
 
 const _ = cockpit.gettext;
+const formatDateTime = t => formatter({
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
+    fractionalSecondDigits: 3,
+    hour12: false
+}).format(t);
 
 const Application = () => {
     const [sensors, setSensors] = useState([]);
