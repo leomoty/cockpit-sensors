@@ -80,7 +80,7 @@ const Application = () => {
                                 </Tbody>
                             ))}
                         </TableComposable>
-                        {lastUpdated ? <span>Last updated at {dateTimeSeconds(lastUpdated)}</span> : null}
+                        {lastUpdated ? <span>{_("Last updated at")} {formatDateTime(lastUpdated)}</span> : null}
                     </GridItem>
                 </Grid>
             </PageSection>
